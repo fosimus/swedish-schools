@@ -10,5 +10,8 @@
     "node-html-parser": "^1.2.5",
     "node-xlsx": "^0.15.0",
     "promise-sequential": "^1.1.1"
+  },
+  "devDependencies": {
+    "eslint": "^6.8.0"
   }
 }
