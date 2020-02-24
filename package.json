@@ -1,0 +1,14 @@
+{
+  "name": "schools",
+  "version": "1.0.0",
+  "main": "start.js",
+  "author": "Andy",
+  "license": "MIT",
+  "dependencies": {
+    "mysql": "^2.18.1",
+    "node-fetch": "^2.6.0",
+    "node-html-parser": "^1.2.5",
+    "node-xlsx": "^0.15.0",
+    "promise-sequential": "^1.1.1"
+  }
+}
