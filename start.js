@@ -39,6 +39,26 @@ const getPagePromises = () => Array(totalPages)
   })
   )
 
+const parseSchoolPage = body => {
+  const html = parse(body)
+  const bar = html.querySelectorAll('.bar-chart--text').find(el => /(av max 340)/.test(el))
+  const score = bar && bar.text ? bar.text.replace(' (av max 340)', '') : 0
+  const name =
+    (html.querySelectorAll('h1.heading')[0] &&
+      html.querySelectorAll('h1.heading')[0].text) ||
+    'None'
+  const address = html
+    .querySelectorAll('[aria-labelledby="iov-info-address"]')
+    .map(el => el.text)
+    .join()
+
+  return {
+    address,
+    name,
+    score: parseInt(score)
+  }
+}
+
 ;(async () => {
   try {
     const schools = await pAll(getPagePromises())
