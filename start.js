@@ -140,6 +140,36 @@ const createDocument = () => {
   })
 }
 
+
+const runSchools = schoolIDs => new Promise((resolve, reject) => {
+  let retry = 3
+  const run = async schoolIDs => {
+    const schoolPromises = getSchoolPromises(schoolIDs)
+
+    try {
+      const schools = await pAll(schoolPromises, { concurrency: 100 })
+      const failedSchoolIDs = schools.filter(school => school !== null)
+
+      if (failedSchoolIDs && failedSchoolIDs.length > 0 && retry > 0) {
+        console.log('Retry schoolIDs', failedSchoolIDs)
+        retry--
+        run(failedSchoolIDs)
+      } else {
+        if (failedSchoolIDs.length > 0) {
+          console.log('Cannot parse schools', failedSchoolIDs)
+        }
+        if (failedSchoolIDs.length === 0) {
+          console.log('All schools successfully parsed!')
+        }
+        resolve()
+      }
+    } catch (e) {
+      console.log(e)
+    }
+  }
+  run(schoolIDs)
+})
+
 ;(async () => {
   try {
     const schools = await pAll(getPagePromises())
