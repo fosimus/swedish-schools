@@ -59,6 +59,46 @@ const parseSchoolPage = body => {
   }
 }
 
+const getSchoolPromises = schoolIDs => {
+  return schoolIDs.map(schoolID => {
+    return () => new Promise(async (resolve, reject) => {
+      try {
+        const { body } = await got(schoolLink + schoolID, { timeout: 60000, retry: 10 })
+        const { address, name, score } = parseSchoolPage(body)
+        console.log('School', schoolID)
+
+        if (!name || !address) {
+          if (!name) {
+            console.log('--- No school name', schoolID)
+          }
+          if (!address) {
+            console.log('--- No school addres', schoolID)
+          }
+          resolve(schoolID)
+          return
+        }
+
+        const schoolData = [
+          [
+            `https://utbildningsguiden.skolverket.se/skolenhet?schoolUnitID=${schoolID}`,
+            score,
+            name,
+            address
+          ]
+        ]
+        const buffer = xlsx.build([{ name: schoolID, data: schoolData }])
+
+        fs.writeFile(`./temp/school-${schoolID}.xlsx`, buffer, err => {
+          if (err) throw err
+          resolve(null)
+        })
+      } catch (e) {
+        resolve(schoolID)
+      }
+    })
+  })
+}
+
 ;(async () => {
   try {
     const schools = await pAll(getPagePromises())
