@@ -99,6 +99,47 @@ const getSchoolPromises = schoolIDs => {
   })
 }
 
+const getSchoolIDs = schools => schools.reduce((acc, cur) => {
+  cur.map(el => {
+    acc.push(el)
+  })
+  return acc
+}, [])
+
+const createDocument = () => {
+  const directoryPath = path.join(__dirname, 'temp')
+
+  fs.readdir(directoryPath, (e, files) => {
+    if (e) {
+      console.log(`Unable to scan directory: ${e}`)
+      return
+    }
+
+    const data = files.reduce((acc, fileName) => {
+      if (!/school-/.test(fileName)) {
+        return acc
+      }
+      const schoolData = xlsx.parse(`./temp/${fileName}`)
+      // if (schoolData[0].data[0][1] > 260) {
+      acc.push(schoolData[0].data[0])
+      // }
+      return acc
+    }, [[
+      'Statistic',
+      'Genomsnittligt meritvärde aktuellt läsår. Det maximala meritvärde är 340 poäng',
+      'School name',
+      'Address'
+    ]])
+
+    const buffer = xlsx.build([{ name: 'schools', data }])
+
+    fs.writeFile('./schools.xlsx', buffer, e => {
+      if (e) throw e
+      console.log('Schools document created!')
+    })
+  })
+}
+
 ;(async () => {
   try {
     const schools = await pAll(getPagePromises())
