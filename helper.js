@@ -18,12 +18,8 @@ export const getGrades = school => ({
 })
 
 export const timer = (data) => {
-  const interval = setInterval(() => {
-    console.log('---------------------------------')
-    console.log('TCL: pagesCount', data.pagesCount)
-    console.log('TCL: statisticsCount', data.statisticsCount)
-    console.log('TCL: schoolsCount', data.schoolsCount)
-  }, 1000)
-
-  return interval
+  console.log('---------------------------------')
+  console.log('TCL: pagesCount', data.pagesCount)
+  console.log('TCL: statisticsCount', data.statisticsCount)
+  console.log('TCL: schoolsCount', data.schoolsCount)
 }

@@ -162,7 +162,10 @@ const createDocument = schools => {
 }
 
 ;(async () => {
-  const interval = timer({ pagesCount, statisticsCount, schoolsCount })
+  const interval = setInterval(() => {
+    timer({ pagesCount, statisticsCount, schoolsCount })
+  }, 1000)
+
   try {
     const schools = await getAllSchools()
     const schoolsWithMetrics = await getSchoolMetrics(schools)
