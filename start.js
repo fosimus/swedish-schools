@@ -1,14 +1,14 @@
-const pAll = require('p-all')
-const got = require('got')
-const xlsx = require('node-xlsx')
-const fs = require('fs')
-const path = require('path')
+import pAll from 'p-all'
+import got from 'got'
+import xlsx from 'node-xlsx'
+import fs from 'fs'
+import { timer, getSchoolAddress, getSchoolScore, getGrades } from './helper'
 
 const getPageLink = page => `https://utbildningsguiden.skolverket.se/appresource/4.5773086416b1c2d84ca134/12.5406806016b70e49d5e2f79/?page=${page}&namn=&omrade=01&skolform=&arskurser=0%2C1%2C2%2C3%2C4%2C5%2C6%2C7%2C8%2C9%2C10&organisationsform=&svAjaxReqParam=ajax`
 const headers = { 'X-Requested-With': 'XMLHttpRequest' }
-
 const TIMEOUT = 120000
 const OPT = 50
+
 let pagesCount = 0
 let schoolsCount = 0
 let statisticsCount = 0
@@ -52,28 +52,6 @@ const getAllSchools = async () => {
   } catch (e) {
     throw new Error(`Err: ${e}`)
   }
-}
-
-const getSchoolValues = school => {
-  // TODO fix
-  const data = school &&
-  school.stat &&
-  school.stat['gr-statistics'] &&
-  school.stat['gr-statistics'].averageGradesMeritRating9thGrade &&
-  school.stat['gr-statistics'].averageGradesMeritRating9thGrade.schoolValues &&
-  school.stat['gr-statistics'].averageGradesMeritRating9thGrade.schoolValues[0] &&
-  school.stat['gr-statistics'].averageGradesMeritRating9thGrade.schoolValues[0].value
-  return data
-}
-
-const getSchoolAddress = school => {
-  const data = school &&
-  school.stat &&
-  school.stat.self &&
-  school.stat.self.contactInfo &&
-  school.stat.self.contactInfo.addresses &&
-  school.stat.self.contactInfo.addresses[0]
-  return data
 }
 
 const getStatisticPromises = links => Object.keys(links)
@@ -130,20 +108,6 @@ const getSchoolMetrics = async schools => {
   }
 }
 
-const getGrades = school => ({
-  g6sve: school.stat['gr-statistics']?.averageResultNationalTestsSubjectSVE6thGrade?.schoolValues[0]?.value,
-  g6eng: school.stat['gr-statistics']?.averageResultNationalTestsSubjectENG6thGrade?.schoolValues[0]?.value,
-  g6mat: school.stat['gr-statistics']?.averageResultNationalTestsSubjectMA6thGrade?.schoolValues[0]?.value,
-  g6sva: school.stat['gr-statistics']?.averageResultNationalTestsSubjectSVA6thGrade?.schoolValues[0]?.value,
-  g9sve: school.stat['gr-statistics']?.averageResultNationalTestsSubjectSVE9thGrade?.schoolValues[0]?.value,
-  g9eng: school.stat['gr-statistics']?.averageResultNationalTestsSubjectENG9thGrade?.schoolValues[0]?.value,
-  g9mat: school.stat['gr-statistics']?.averageResultNationalTestsSubjectMA9thGrade?.schoolValues[0]?.value,
-  g9sva: school.stat['gr-statistics']?.averageResultNationalTestsSubjectSVA9thGrade?.schoolValues[0]?.value,
-  g6pas: school.stat['gr-statistics']?.ratioOfPupilsIn6thGradeWithAllSubjectsPassed?.schoolValues[0]?.value,
-  g9pas: school.stat['gr-statistics']?.ratioOfPupilsIn9thGradeWithAllSubjectsPassed?.schoolValues[0]?.value,
-  progYR: school.stat['gr-statistics']?.ratioOfPupils9thGradeEligibleForNationalProgramYR?.schoolValues[0]?.value
-})
-
 const createDocument = schools => {
   const data = [[
     // TODO proper names in Swedish
@@ -162,7 +126,6 @@ const createDocument = schools => {
     'Åk 9: Andel elever med godkända betyg i alla ämnen',
     'Behöriga till gymnasieskolan, yrkesprogram'
   ]]
-  // TODO remove fsk F(0) gr F(1-6) grs F(1-9) for 92347699
 
   schools.map(school => {
     const address = getSchoolAddress(school)
@@ -174,7 +137,7 @@ const createDocument = schools => {
 
     data.push([
       `https://utbildningsguiden.skolverket.se/skolenhet?schoolUnitID=${school.code}`,
-      getSchoolValues(school),
+      getSchoolScore(school),
       school.name,
       `${address.street} ${address.zipCode} ${address.city}`,
       type,
@@ -198,19 +161,8 @@ const createDocument = schools => {
   })
 }
 
-const timer = () => {
-  const interval = setInterval(() => {
-    console.log('---------------------------------')
-    console.log('TCL: pagesCount', pagesCount)
-    console.log('TCL: statisticsCount', statisticsCount)
-    console.log('TCL: schoolsCount', schoolsCount)
-  }, 1000)
-
-  return interval
-}
-
 ;(async () => {
-  const interval = timer()
+  const interval = timer({ pagesCount, statisticsCount, schoolsCount })
   try {
     const schools = await getAllSchools()
     const schoolsWithMetrics = await getSchoolMetrics(schools)
