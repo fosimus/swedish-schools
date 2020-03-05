@@ -3,8 +3,7 @@ const got = require('got')
 const xlsx = require('node-xlsx')
 const fs = require('fs')
 const path = require('path')
-// TODO check git log history and apply Andrei
-// const getPageLink = page => `https://utbildningsguiden.skolverket.se/appresource/4.5773086416b1c2d84ca134/12.5406806016b70e49d5e2f79/?page=${page}&svAjaxReqParam=ajax`
+
 const getPageLink = page => `https://utbildningsguiden.skolverket.se/appresource/4.5773086416b1c2d84ca134/12.5406806016b70e49d5e2f79/?page=${page}&namn=&omrade=01&skolform=&arskurser=0%2C1%2C2%2C3%2C4%2C5%2C6%2C7%2C8%2C9%2C10&organisationsform=&svAjaxReqParam=ajax`
 const headers = { 'X-Requested-With': 'XMLHttpRequest' }
 
@@ -168,7 +167,7 @@ const createDocument = schools => {
   schools.map(school => {
     const address = getSchoolAddress(school)
     const grades = getGrades(school)
-     const type = school.typeOfSchooling.reduce((a,c) => {
+    const type = school.typeOfSchooling.reduce((a, c) => {
       const schoolYears = c.schoolYears.length <= 1 ? c.schoolYears : `${c.schoolYears[0]}-${c.schoolYears[c.schoolYears.length - 1]}`
       return `${a}${c.code} F(${schoolYears}) `
     }, '')
@@ -214,11 +213,9 @@ const timer = () => {
   const interval = timer()
   try {
     const schools = await getAllSchools()
-    const schoolsWithMetrics = await getSchoolMetrics(sc
-ols)
+    const schoolsWithMetrics = await getSchoolMetrics(schools)
 
     createDocument(schoolsWithMetrics)
-
   } catch (e) {
     console.log(e)
   }

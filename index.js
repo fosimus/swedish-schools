@@ -11,4 +11,4 @@ require('@babel/register')({
   ]
 })
 
-require('./run')
+require('./start')
