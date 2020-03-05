@@ -29,12 +29,10 @@ const getPagePromises = pagination =>
 
 const getAllSchools = async () => {
   const { pagination } = await got(getPageLink(0), { headers }).json()
-
   const allPages = getPagePromises(pagination)
 
   try {
     const schoolsData = await pAll(allPages, { concurrency: OPT })
-
     const schools = schoolsData.reduce((acc, cur) => {
       cur.map(el => {
         acc.push(el)
@@ -50,7 +48,7 @@ const getAllSchools = async () => {
 
     return schools
   } catch (e) {
-    throw new Error(`Err: ${e}`)
+    return Promise.reject(e)
   }
 }
 
@@ -63,7 +61,6 @@ const getStatisticPromises = links => Object.keys(links)
       resolve({ [linkKey]: schoolData })
     } catch (e) {
       reject(e)
-      // TODO add reject for all and test
     }
   }))
 
@@ -84,7 +81,6 @@ const getMetricsBySchool = school => () => new Promise(async (resolve, reject) =
 
   try {
     const schoolStatistics = await pAll(statisticPromises)
-
     const stat = schoolStatistics.reduce((acc, cur) => {
       const result = { ...acc, ...cur }
       return result
@@ -103,8 +99,7 @@ const getSchoolMetrics = async schools => {
     const schoolWithMetrics = await pAll(metricPromises, { concurrency: OPT })
     return schoolWithMetrics
   } catch (e) {
-    // TODO test with reject or throw
-    throw new Error(`Err: ${e}`)
+    return Promise.reject(e)
   }
 }
 
@@ -157,7 +152,7 @@ const createDocument = schools => {
 
   fs.writeFile('./new-schools.xlsx', buffer, e => {
     if (e) throw e
-    console.log('Schools document created!')
+    console.log('Document created!')
   })
 }
 

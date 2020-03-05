@@ -19,7 +19,7 @@ export const getGrades = school => ({
 
 export const timer = (data) => {
   console.log('---------------------------------')
-  console.log('TCL: pagesCount', data.pagesCount)
-  console.log('TCL: statisticsCount', data.statisticsCount)
-  console.log('TCL: schoolsCount', data.schoolsCount)
+  console.log('pagesCount', data.pagesCount)
+  console.log('statisticsCount', data.statisticsCount)
+  console.log('schoolsCount', data.schoolsCount)
 }
