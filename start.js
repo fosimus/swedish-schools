@@ -88,8 +88,6 @@ const getMetricsBySchool = (school, writeCSVStream) => () => new Promise(async (
     writeCSVStream.write(
       parseSchoolData({ ...school, stat })
     )
-
-    resolve({ ...school, stat })
   } catch (e) {
     reject(e)
   }
@@ -99,8 +97,7 @@ const getSchoolMetrics = async (schools, writeCSVStream) => {
   const metricPromises = schools.map(school => getMetricsBySchool(school, writeCSVStream))
 
   try {
-    const schoolWithMetrics = await pAll(metricPromises, { concurrency: OPT })
-    return schoolWithMetrics
+    await pAll(metricPromises, { concurrency: OPT })
   } catch (e) {
     return Promise.reject(e)
   }
@@ -183,10 +180,7 @@ const createDocument = () => {
   try {
     writeCSVStream = await createDocument()
     const schools = await getAllSchools()
-    // TODO remove schoolsWithMetrics
-    const schoolsWithMetrics = await getSchoolMetrics(schools, writeCSVStream)
-
-    // createDocument(schoolsWithMetrics)
+    await getSchoolMetrics(schools, writeCSVStream)
   } catch (e) {
     console.error(e)
   }
