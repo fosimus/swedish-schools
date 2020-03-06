@@ -63,7 +63,7 @@ const getStatisticPromises = links => Object.keys(links)
     }
   }))
 
-const getMetricsBySchool = school => () => new Promise(async (resolve, reject) => {
+const getMetricsBySchool = (school, writeCSVStream) => () => new Promise(async (resolve, reject) => {
   schoolsCount++
   let statisticLinks
   const statisticHref = school._links.statistics.href
@@ -85,14 +85,18 @@ const getMetricsBySchool = school => () => new Promise(async (resolve, reject) =
       return result
     }, {})
 
+    writeCSVStream.write(
+      parseSchoolData({ ...school, stat })
+    )
+
     resolve({ ...school, stat })
   } catch (e) {
     reject(e)
   }
 })
 
-const getSchoolMetrics = async schools => {
-  const metricPromises = schools.map(school => getMetricsBySchool(school))
+const getSchoolMetrics = async (schools, writeCSVStream) => {
+  const metricPromises = schools.map(school => getMetricsBySchool(school, writeCSVStream))
 
   try {
     const schoolWithMetrics = await pAll(metricPromises, { concurrency: OPT })
@@ -102,50 +106,51 @@ const getSchoolMetrics = async schools => {
   }
 }
 
-const createDocument = schools => {
-  const data = [[
-    // TODO proper names in Swedish
-    'Link',
-    'Åk 9: Genomsnittligt meritvärde',
-    'School name',
-    'Address',
-    'School type',
-    'F6 English',
-    'F6 Mathematics',
-    'F6 Swedish',
-    'F9 English',
-    'F9 Mathematics',
-    'F9 Swedish',
-    'Åk 6: Andel elever med godkända betyg i alla ämnen',
-    'Åk 9: Andel elever med godkända betyg i alla ämnen',
-    'Behöriga till gymnasieskolan, yrkesprogram'
-  ]]
+const parseSchoolData = school => {
+  // TODO proper names in Swedish
+  const address = getSchoolAddress(school)
+  const grades = getGrades(school)
+  const type = school.typeOfSchooling.reduce((a, c) => {
+    const schoolYears = c.schoolYears.length <= 1
+      ? c.schoolYears
+      : `${c.schoolYears[0]}-${c.schoolYears[c.schoolYears.length - 1]}`
+    return `${a}${c.code} F(${schoolYears}) `
+  }, '')
 
-  schools.map(school => {
-    const address = getSchoolAddress(school)
-    const grades = getGrades(school)
-    const type = school.typeOfSchooling.reduce((a, c) => {
-      const schoolYears = c.schoolYears.length <= 1 ? c.schoolYears : `${c.schoolYears[0]}-${c.schoolYears[c.schoolYears.length - 1]}`
-      return `${a}${c.code} F(${schoolYears}) `
-    }, '')
+  return [
+    `"https://utbildningsguiden.skolverket.se/skolenhet?schoolUnitID=${school.code}",`,
+    `"${school.name || ''}",`,
+    `"${address.street} ${address.zipCode} ${address.city}",`,
+    `"${type}",`,
+    `"${getSchoolScore(school) || ''}",`,
+    `"${grades.g6eng || ''}",`,
+    `"${grades.g6mat || ''}",`,
+    `"${grades.g6sve || ''}",`,
+    `"${grades.g9eng || ''}",`,
+    `"${grades.g9mat || ''}",`,
+    `"${grades.g9sve || ''}",`,
+    `"${grades.g6pas || ''}",`,
+    `"${grades.g9pas || ''}",`,
+    `"${grades.progYR || ''}"\n`
+  ].join('')
+}
 
-    data.push([
-      `https://utbildningsguiden.skolverket.se/skolenhet?schoolUnitID=${school.code}`,
-      getSchoolScore(school),
-      school.name,
-      `${address.street} ${address.zipCode} ${address.city}`,
-      type,
-      grades.g6eng,
-      grades.g6mat,
-      grades.g6sve,
-      grades.g9eng,
-      grades.g9mat,
-      grades.g9sve,
-      grades.g6pas,
-      grades.g9pas,
-      grades.progYR
-    ])
-  })
+const cvsHeader = [
+  '"Link",',
+  '"School name",',
+  '"Address",',
+  '"School type",',
+  '"Åk 9: Genomsnittligt meritvärde",',
+  '"F6 English",',
+  '"F6 Mathematics",',
+  '"F6 Swedish",',
+  '"F9 English",',
+  '"F9 Mathematics",',
+  '"F9 Swedish",',
+  '"Åk 6: Andel elever med godkända betyg i alla ämnen",',
+  '"Åk 9: Andel elever med godkända betyg i alla ämnen",',
+  '"Behöriga till gymnasieskolan, yrkesprogram"\n'
+].join('')
 
 const createDocument = () => {
   try {
@@ -176,12 +181,14 @@ const createDocument = () => {
   let writeCSVStream
 
   try {
+    writeCSVStream = await createDocument()
     const schools = await getAllSchools()
-    const schoolsWithMetrics = await getSchoolMetrics(schools)
+    // TODO remove schoolsWithMetrics
+    const schoolsWithMetrics = await getSchoolMetrics(schools, writeCSVStream)
 
-    createDocument(schoolsWithMetrics)
+    // createDocument(schoolsWithMetrics)
   } catch (e) {
-    console.log(e)
+    console.error(e)
   }
   writeCSVStream.end()
   clearInterval(interval)
