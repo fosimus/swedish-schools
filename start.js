@@ -1,20 +1,17 @@
-import pAll from 'p-all'
 import got from 'got'
+import pAll from 'p-all'
 import fs, { promises as fsp } from 'fs'
-import { cvsHeader, parseSchoolData } from './helper'
-import { forker } from './fork'
 
-const getPageLink = page => `https://utbildningsguiden.skolverket.se/appresource/4.5773086416b1c2d84ca134/12.5406806016b70e49d5e2f79/?page=${page}&namn=&omrade=01&skolform=&arskurser=0%2C1%2C2%2C3%2C4%2C5%2C6%2C7%2C8%2C9%2C10&organisationsform=&svAjaxReqParam=ajax`
-const headers = { 'X-Requested-With': 'XMLHttpRequest' }
-const TIMEOUT = 120000
-const OPT = 50
+import { forker } from './fork'
+import { CONCURRENCY, HEADERS } from './consts'
+import { cvsHeader, parseSchoolData, getPageLink } from './helper'
 
 const getPagePromises = pagination =>
   Array(pagination.totalPages)
     .fill(null)
     .map((_, index) => () => new Promise(async (resolve, reject) => {
       try {
-        const { schoolUnits } = await got(getPageLink(index), { TIMEOUT, headers }).json()
+        const { schoolUnits } = await got(getPageLink(index), { headers: HEADERS }).json()
 
         resolve(schoolUnits)
       } catch (e) {
@@ -23,11 +20,11 @@ const getPagePromises = pagination =>
     }))
 
 const getAllSchools = async () => {
-  const { pagination } = await got(getPageLink(0), { headers }).json()
+  const { pagination } = await got(getPageLink(0), { headers: HEADERS }).json()
   const allPages = getPagePromises(pagination)
 
   try {
-    const schoolsData = await pAll(allPages, { concurrency: OPT })
+    const schoolsData = await pAll(allPages, { concurrency: CONCURRENCY })
     const schools = schoolsData.reduce((acc, cur) => {
       cur.map(el => {
         acc.push(el)
