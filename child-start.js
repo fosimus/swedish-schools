@@ -1,15 +1,14 @@
+import pAll from 'p-all'
 import { runMetricsBySchool } from './helper'
 
-const forkName = process.argv[2]
-
-process.on('message', async ({ school, i }) => {
-  console.log('child i', i)
+process.on('message', async ({ schools }) => {
+  // console.log("schools", schools.length)
   try {
-    const stat = await runMetricsBySchool(school, i)
+    const promises = schools.map(school => () => runMetricsBySchool(school))
+    const stat = await pAll(promises, { concurrency: 10 })
 
     process.send({ status: 'DONE', value: stat })
   } catch (e) {
-    console.log('child id error', e, forkName)
     process.send({ status: 'ERROR', value: e })
   }
 })

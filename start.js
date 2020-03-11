@@ -1,22 +1,18 @@
 import pAll from 'p-all'
 import got from 'got'
 import fs, { promises as fsp } from 'fs'
-import { timer, getSchoolAddress, getSchoolScore, getGrades } from './helper'
+import { cvsHeader, parseSchoolData } from './helper'
+import { forker } from './fork'
 
 const getPageLink = page => `https://utbildningsguiden.skolverket.se/appresource/4.5773086416b1c2d84ca134/12.5406806016b70e49d5e2f79/?page=${page}&namn=&omrade=01&skolform=&arskurser=0%2C1%2C2%2C3%2C4%2C5%2C6%2C7%2C8%2C9%2C10&organisationsform=&svAjaxReqParam=ajax`
 const headers = { 'X-Requested-With': 'XMLHttpRequest' }
 const TIMEOUT = 120000
 const OPT = 50
 
-let pagesCount = 0
-let schoolsCount = 0
-let statisticsCount = 0
-
 const getPagePromises = pagination =>
   Array(pagination.totalPages)
     .fill(null)
     .map((_, index) => () => new Promise(async (resolve, reject) => {
-      pagesCount++
       try {
         const { schoolUnits } = await got(getPageLink(index), { TIMEOUT, headers }).json()
 
@@ -50,104 +46,61 @@ const getAllSchools = async () => {
     return Promise.reject(e)
   }
 }
+// let ipa = 0
+// const getMetricsBySchool = (school, writeCSVStream) => () => new Promise(async (resolve, reject) => {
+//   console.log("child i", ipa)
+//   ipa++
+//   let statisticLinks
+//   const statisticHref = school._links.statistics.href
 
-const getStatisticPromises = links => Object.keys(links)
-  .map(linkKey => () => new Promise(async (resolve, reject) => {
-    statisticsCount++
-    try {
-      const schoolData = await got(links[linkKey]).json()
+//   try {
+//     const { _links } = await got(statisticHref).json()
 
-      resolve({ [linkKey]: schoolData })
-    } catch (e) {
-      reject(e)
-    }
-  }))
+//     statisticLinks = _links
+//   } catch (e) {
+//     reject(e)
+//   }
 
-const getMetricsBySchool = (school, writeCSVStream) => () => new Promise(async (resolve, reject) => {
-  schoolsCount++
-  let statisticLinks
-  const statisticHref = school._links.statistics.href
+//   const statisticPromises = getStatisticPromises(statisticLinks)
 
-  try {
-    const { _links } = await got(statisticHref).json()
+//   try {
+//     const schoolStatistics = await pAll(statisticPromises)
+//     const stat = schoolStatistics.reduce((acc, cur) => {
+//       const result = { ...acc, ...cur }
+//       return result
+//     }, {})
 
-    statisticLinks = _links
-  } catch (e) {
-    reject(e)
-  }
+//     resolve()
 
-  const statisticPromises = getStatisticPromises(statisticLinks)
+//     writeCSVStream.write(
+//       parseSchoolData({ ...school, stat })
+//     )
+//   } catch (e) {
+//     reject(e)
+//   }
+// })
 
-  try {
-    const schoolStatistics = await pAll(statisticPromises)
-    const stat = schoolStatistics.reduce((acc, cur) => {
-      const result = { ...acc, ...cur }
-      return result
-    }, {})
+const getSchoolMetrics = async (schoolsData) => {
+  const schools = [...schoolsData]
+  // const metricPromises = schools.map(school => getMetricsBySchool(school, writeCSVStream))
+  // TODO cheecek all schools.length and reesult
+  console.log('getSchoolMetrics -> metricPromises.length', schools.length)
 
-    writeCSVStream.write(
-      parseSchoolData({ ...school, stat })
-    )
-  } catch (e) {
-    reject(e)
-  }
-})
-
-const getSchoolMetrics = async (schools, writeCSVStream) => {
-  const metricPromises = schools.map(school => getMetricsBySchool(school, writeCSVStream))
+  const writeCSVStream = await createDocument()
 
   try {
-    await pAll(metricPromises, { concurrency: OPT })
+    await forker(schools, (schoolsWithStat) => {
+      writeCSVStream.write(
+        schoolsWithStat.map(school => parseSchoolData(school)).join('')
+      )
+    })
+    // await pAll(metricPromises, { concurrency: 10 })
   } catch (e) {
     return Promise.reject(e)
+  } finally {
+    writeCSVStream.end()
   }
 }
-
-const parseSchoolData = school => {
-  // TODO proper names in Swedish
-  const address = getSchoolAddress(school)
-  const grades = getGrades(school)
-  const type = school.typeOfSchooling.reduce((a, c) => {
-    const schoolYears = c.schoolYears.length <= 1
-      ? c.schoolYears
-      : `${c.schoolYears[0]}-${c.schoolYears[c.schoolYears.length - 1]}`
-    return `${a}${c.code} F(${schoolYears}) `
-  }, '')
-
-  return [
-    `"https://utbildningsguiden.skolverket.se/skolenhet?schoolUnitID=${school.code}",`,
-    `"${school.name || ''}",`,
-    `"${address.street} ${address.zipCode} ${address.city}",`,
-    `"${type}",`,
-    `"${getSchoolScore(school) || ''}",`,
-    `"${grades.g6eng || ''}",`,
-    `"${grades.g6mat || ''}",`,
-    `"${grades.g6sve || ''}",`,
-    `"${grades.g9eng || ''}",`,
-    `"${grades.g9mat || ''}",`,
-    `"${grades.g9sve || ''}",`,
-    `"${grades.g6pas || ''}",`,
-    `"${grades.g9pas || ''}",`,
-    `"${grades.progYR || ''}"\n`
-  ].join('')
-}
-
-const cvsHeader = [
-  '"Link",',
-  '"School name",',
-  '"Address",',
-  '"School type",',
-  '"Åk 9: Genomsnittligt meritvärde",',
-  '"F6 English",',
-  '"F6 Mathematics",',
-  '"F6 Swedish",',
-  '"F9 English",',
-  '"F9 Mathematics",',
-  '"F9 Swedish",',
-  '"Åk 6: Andel elever med godkända betyg i alla ämnen",',
-  '"Åk 9: Andel elever med godkända betyg i alla ämnen",',
-  '"Behöriga till gymnasieskolan, yrkesprogram"\n'
-].join('')
 
 const createDocument = () => {
   try {
@@ -157,12 +110,6 @@ const createDocument = () => {
     writeCSVStream.on('error', e => {
       console.error('Stream error', e)
     })
-    writeCSVStream.on('open', () => {
-      console.log('Stream open')
-    })
-    writeCSVStream.on('close', () => {
-      console.log('Stream closed')
-    })
 
     return Promise.resolve(writeCSVStream)
   } catch (e) {
@@ -171,19 +118,15 @@ const createDocument = () => {
 }
 
 ;(async () => {
-  const interval = setInterval(() => {
-    timer({ pagesCount, statisticsCount, schoolsCount })
-  }, 1000)
-
-  let writeCSVStream
+  const start = new Date().getTime()
 
   try {
-    writeCSVStream = await createDocument()
+    // TODO move to init.js
     const schools = await getAllSchools()
-    await getSchoolMetrics(schools, writeCSVStream)
+    await getSchoolMetrics(schools)
+    console.log('DONE')
   } catch (e) {
     console.error(e)
   }
-  writeCSVStream.end()
-  clearInterval(interval)
+  console.log('Execution time: ', new Date().getTime() - start)
 })()
