@@ -86,9 +86,9 @@ const getAllSchools = async () => {
   try {
     const schools = await getAllSchools()
     await getSchoolMetrics(schools)
-    console.log('DONE')
   } catch (e) {
     console.error(e)
+  } finally {
+    console.log('Execution time: ', new Date().getTime() - start)
   }
-  console.log('Execution time: ', new Date().getTime() - start)
 })()
