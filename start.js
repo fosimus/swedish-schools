@@ -6,43 +6,6 @@ import { forker } from './fork'
 import { CONCURRENCY, HEADERS } from './consts'
 import { cvsHeader, parseSchoolData, getPageLink } from './helper'
 
-const getPagePromises = pagination =>
-  Array(pagination.totalPages)
-    .fill(null)
-    .map((_, index) => () => new Promise(async (resolve, reject) => {
-      try {
-        const { schoolUnits } = await got(getPageLink(index), { headers: HEADERS }).json()
-
-        resolve(schoolUnits)
-      } catch (e) {
-        reject(e)
-      }
-    }))
-
-const getAllSchools = async () => {
-  const { pagination } = await got(getPageLink(0), { headers: HEADERS }).json()
-  const allPages = getPagePromises(pagination)
-
-  try {
-    const schoolsData = await pAll(allPages, { concurrency: CONCURRENCY })
-    const schools = schoolsData.reduce((acc, cur) => {
-      cur.map(el => {
-        acc.push(el)
-      })
-      return acc
-    }, [])
-
-    if (pagination.totalElements !== schools.length) {
-      console.log('totalElements !== schools', pagination.totalElements, schools.length)
-    } else {
-      console.log('total schools', pagination.totalElements)
-    }
-
-    return schools
-  } catch (e) {
-    return Promise.reject(e)
-  }
-}
 // let ipa = 0
 // const getMetricsBySchool = (school, writeCSVStream) => () => new Promise(async (resolve, reject) => {
 //   console.log("child i", ipa)
@@ -109,6 +72,44 @@ const createDocument = () => {
     })
 
     return Promise.resolve(writeCSVStream)
+  } catch (e) {
+    return Promise.reject(e)
+  }
+}
+
+const getPagePromises = pagination =>
+  Array(pagination.totalPages)
+    .fill(null)
+    .map((_, index) => () => new Promise(async (resolve, reject) => {
+      try {
+        const { schoolUnits } = await got(getPageLink(index), { headers: HEADERS }).json()
+
+        resolve(schoolUnits)
+      } catch (e) {
+        reject(e)
+      }
+    }))
+
+const getAllSchools = async () => {
+  const { pagination } = await got(getPageLink(0), { headers: HEADERS }).json()
+  const allPages = getPagePromises(pagination)
+
+  try {
+    const schoolsData = await pAll(allPages, { concurrency: CONCURRENCY })
+    const schools = schoolsData.reduce((acc, cur) => {
+      cur.map(el => {
+        acc.push(el)
+      })
+      return acc
+    }, [])
+
+    if (pagination.totalElements !== schools.length) {
+      console.log('totalElements !== schools', pagination.totalElements, schools.length)
+    } else {
+      console.log('total schools', pagination.totalElements)
+    }
+
+    return schools
   } catch (e) {
     return Promise.reject(e)
   }

@@ -1,8 +1,8 @@
 import pAll from 'p-all'
-import { runMetricsBySchool } from './helper'
+import { runMetricsBySchool } from './metrics'
 
 process.on('message', async ({ schools }) => {
-  // console.log("schools", schools.length)
+  console.log("schools")
   try {
     const promises = schools.map(school => () => runMetricsBySchool(school))
     const stat = await pAll(promises, { concurrency: 10 })

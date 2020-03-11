@@ -1,6 +1,3 @@
-import got from 'got'
-import pAll from 'p-all'
-// TODO maybe slipt the doc into two parts: help and parse?
 export const getPageLink = page => `https://utbildningsguiden.skolverket.se/appresource/4.5773086416b1c2d84ca134/12.5406806016b70e49d5e2f79/?page=${page}&namn=&omrade=01&skolform=&arskurser=0%2C1%2C2%2C3%2C4%2C5%2C6%2C7%2C8%2C9%2C10&organisationsform=&svAjaxReqParam=ajax`
 
 export const getSchoolScore = school =>
@@ -21,45 +18,6 @@ export const getGrades = school => ({
   g9pas: school.stat['gr-statistics']?.ratioOfPupilsIn9thGradeWithAllSubjectsPassed?.schoolValues[0]?.value,
   progYR: school.stat['gr-statistics']?.ratioOfPupils9thGradeEligibleForNationalProgramYR?.schoolValues[0]?.value
 })
-
-// TODO eslint not used arg?
-export const runMetricsBySchool = (school, i) => new Promise(async (resolve, reject) => {
-  let statisticLinks
-  const statisticHref = school._links.statistics.href
-
-  try {
-    const { _links } = await got(statisticHref).json()
-
-    statisticLinks = _links
-  } catch (e) {
-    reject(e)
-  }
-
-  const statisticPromises = getStatisticPromises(statisticLinks)
-
-  try {
-    const schoolStatistics = await pAll(statisticPromises)
-    const stat = schoolStatistics.reduce((acc, cur) => {
-      const result = { ...acc, ...cur }
-      return result
-    }, {})
-
-    resolve({ ...school, stat })
-  } catch (e) {
-    reject(e)
-  }
-})
-
-const getStatisticPromises = links => Object.keys(links)
-  .map(linkKey => () => new Promise(async (resolve, reject) => {
-    try {
-      const schoolData = await got(links[linkKey]).json()
-
-      resolve({ [linkKey]: schoolData })
-    } catch (e) {
-      reject(e)
-    }
-  }))
 
 export const parseSchoolData = school => {
   // TODO proper names in Swedish
