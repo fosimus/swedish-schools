@@ -1,12 +1,13 @@
-export const getPageLink = page => `https://utbildningsguiden.skolverket.se/appresource/4.5773086416b1c2d84ca134/12.5406806016b70e49d5e2f79/?page=${page}&svAjaxReqParam=ajax`
-// only Stockholm export const getPageLink = page => `https://utbildningsguiden.skolverket.se/appresource/4.5773086416b1c2d84ca134/12.5406806016b70e49d5e2f79/?page=${page}&namn=&omrade=01&skolform=&arskurser=0%2C1%2C2%2C3%2C4%2C5%2C6%2C7%2C8%2C9%2C10&organisationsform=&svAjaxReqParam=ajax`
+// export const getPageLink = page => `https://utbildningsguiden.skolverket.se/appresource/4.5773086416b1c2d84ca134/12.5406806016b70e49d5e2f79/?page=${page}&svAjaxReqParam=ajax`
+// only Stockholm
+export const getPageLink = (page) => `https://utbildningsguiden.skolverket.se/appresource/4.5773086416b1c2d84ca134/12.5406806016b70e49d5e2f79/?page=${page}&namn=&omrade=01&skolform=&arskurser=0%2C1%2C2%2C3%2C4%2C5%2C6%2C7%2C8%2C9%2C10&organisationsform=&svAjaxReqParam=ajax`
 
-export const getSchoolScore = school =>
+export const getSchoolScore = (school) =>
   school?.stat['gr-statistics']?.averageGradesMeritRating9thGrade?.schoolValues[0]?.value
 
-export const getSchoolAddress = school => school?.stat?.self?.contactInfo?.addresses[0]
+export const getSchoolAddress = (school) => school?.stat?.self?.contactInfo?.addresses[0]
 
-export const getGrades = school => ({
+export const getGrades = (school) => ({
   g6sve: school.stat['gr-statistics']?.averageResultNationalTestsSubjectSVE6thGrade?.schoolValues[0]?.value,
   g6eng: school.stat['gr-statistics']?.averageResultNationalTestsSubjectENG6thGrade?.schoolValues[0]?.value,
   g6mat: school.stat['gr-statistics']?.averageResultNationalTestsSubjectMA6thGrade?.schoolValues[0]?.value,
@@ -20,7 +21,7 @@ export const getGrades = school => ({
   progYR: school.stat['gr-statistics']?.ratioOfPupils9thGradeEligibleForNationalProgramYR?.schoolValues[0]?.value
 })
 
-export const parseSchoolData = school => {
+export const parseSchoolData = (school) => {
   const address = getSchoolAddress(school)
   const grades = getGrades(school)
   const type = school.typeOfSchooling.reduce((a, c) => {

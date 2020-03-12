@@ -1,8 +1,8 @@
 import got from 'got'
 import pAll from 'p-all'
 
-const getStatisticPromises = links => Object.keys(links)
-  .map(linkKey => () => new Promise(async (resolve, reject) => {
+const getStatisticPromises = (links) => Object.keys(links)
+  .map((linkKey) => () => new Promise(async (resolve, reject) => {
     try {
       const schoolData = await got(links[linkKey]).json()
 
