@@ -9,7 +9,7 @@ export const forker = (schoolsData, callback) => {
 
   return Promise.all(
     Array(cpusLength).fill(null).map((_, cpuIndex) => new Promise((resolve, reject) => {
-      const forked = fork('child-fork', [`fork-${cpuIndex}`])
+      const forked = fork('./scripts/child-fork', [`fork-${cpuIndex}`])
 
       forked.send({ schools: schools.splice(0, SCHOOLS_PER_FORK) })
 

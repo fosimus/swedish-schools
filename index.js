@@ -1,2 +1,2 @@
-require('./babel')
-require('./start')
+require('./scripts/babel')
+require('./scripts/start')
