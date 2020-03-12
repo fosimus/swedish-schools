@@ -1,4 +1,5 @@
-export const getPageLink = page => `https://utbildningsguiden.skolverket.se/appresource/4.5773086416b1c2d84ca134/12.5406806016b70e49d5e2f79/?page=${page}&namn=&omrade=01&skolform=&arskurser=0%2C1%2C2%2C3%2C4%2C5%2C6%2C7%2C8%2C9%2C10&organisationsform=&svAjaxReqParam=ajax`
+export const getPageLink = page => `https://utbildningsguiden.skolverket.se/appresource/4.5773086416b1c2d84ca134/12.5406806016b70e49d5e2f79/?page=${page}&svAjaxReqParam=ajax`
+// only Stockholm export const getPageLink = page => `https://utbildningsguiden.skolverket.se/appresource/4.5773086416b1c2d84ca134/12.5406806016b70e49d5e2f79/?page=${page}&namn=&omrade=01&skolform=&arskurser=0%2C1%2C2%2C3%2C4%2C5%2C6%2C7%2C8%2C9%2C10&organisationsform=&svAjaxReqParam=ajax`
 
 export const getSchoolScore = school =>
   school?.stat['gr-statistics']?.averageGradesMeritRating9thGrade?.schoolValues[0]?.value
@@ -20,7 +21,6 @@ export const getGrades = school => ({
 })
 
 export const parseSchoolData = school => {
-  // TODO proper names in Swedish
   const address = getSchoolAddress(school)
   const grades = getGrades(school)
   const type = school.typeOfSchooling.reduce((a, c) => {
@@ -53,14 +53,14 @@ export const cvsHeader = [
   '"School name",',
   '"Address",',
   '"School type",',
-  '"Åk 9: Genomsnittligt meritvärde",',
+  '"Year 9: Average credit value",',
   '"F6 English",',
   '"F6 Mathematics",',
   '"F6 Swedish",',
   '"F9 English",',
   '"F9 Mathematics",',
   '"F9 Swedish",',
-  '"Åk 6: Andel elever med godkända betyg i alla ämnen",',
-  '"Åk 9: Andel elever med godkända betyg i alla ämnen",',
-  '"Behöriga till gymnasieskolan, yrkesprogram"\n'
+  '"Year 6: Percentage of students with approved grades in all subjects",',
+  '"Year 9: Percentage of students with approved grades in all subjects",',
+  '"Enrolled in upper secondary school, vocational program"\n'
 ].join('')
