@@ -3,6 +3,7 @@
   "extends": "standard",
   "rules": {
     "no-async-promise-executor": 0,
-    "@babel/plugin-proposal-optional-chaining": 0
+    "@babel/plugin-proposal-optional-chaining": 0,
+    "no-unused-vars": ["error", { "vars": "all", "args": "after-used", "ignoreRestSiblings": false }]
   }
 }

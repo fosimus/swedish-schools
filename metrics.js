@@ -12,8 +12,7 @@ const getStatisticPromises = links => Object.keys(links)
     }
   }))
 
-// TODO eslint not used arg?
-export const runMetricsBySchool = (school, i) => new Promise(async (resolve, reject) => {
+export const runMetricsBySchool = (school) => new Promise(async (resolve, reject) => {
   let statisticLinks
   const statisticHref = school._links.statistics.href
 
