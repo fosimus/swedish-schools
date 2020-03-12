@@ -1,8 +1,8 @@
 {
   "name": "schools",
   "version": "1.0.0",
-  "main": "start.js",
-  "author": "Andy",
+  "main": "index.js",
+  "author": "Andy Fosimus",
   "license": "MIT",
   "devDependencies": {
     "@babel/core": "^7.8.7",
