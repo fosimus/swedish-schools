@@ -27,10 +27,11 @@ const getSchoolMetrics = async (schools) => {
   }
 }
 
-const createDocument = () => {
+const createDocument = async () => {
   try {
-    fsp.writeFile('./test.csv', cvsHeader)
-    const writeCSVStream = fs.createWriteStream('./test.csv', { flags: 'a' })
+    const date = new Date().toLocaleDateString().replace(/\//gi, '.')
+    await fsp.writeFile(`./${date}.csv`, cvsHeader)
+    const writeCSVStream = fs.createWriteStream(`./${date}.csv`, { flags: 'a' })
 
     writeCSVStream.on('error', (e) => {
       console.error('Stream error', e)
