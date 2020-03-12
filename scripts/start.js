@@ -15,7 +15,7 @@ const getSchoolMetrics = async (schools) => {
 
   try {
     await forker(schools, (schoolsWithStat, schoolsLeft) => {
-      const schoolsData = schoolsWithStat.map(school => parseSchoolData(school)).join('')
+      const schoolsData = schoolsWithStat.map((school) => parseSchoolData(school)).join('')
       writeCSVStream.write(schoolsData)
       progressBar.update(schoolsLeft)
     })
@@ -32,7 +32,7 @@ const createDocument = () => {
     fsp.writeFile('./test.csv', cvsHeader)
     const writeCSVStream = fs.createWriteStream('./test.csv', { flags: 'a' })
 
-    writeCSVStream.on('error', e => {
+    writeCSVStream.on('error', (e) => {
       console.error('Stream error', e)
     })
 
@@ -42,7 +42,7 @@ const createDocument = () => {
   }
 }
 
-const getPagePromises = pagination =>
+const getPagePromises = (pagination) =>
   Array(pagination.totalPages)
     .fill(null)
     .map((_, index) => () => new Promise(async (resolve, reject) => {
@@ -62,7 +62,7 @@ const getAllSchools = async () => {
   try {
     const schoolsData = await pAll(allPages, { concurrency: CONCURRENCY })
     const schools = schoolsData.reduce((acc, cur) => {
-      cur.map(el => {
+      cur.map((el) => {
         acc.push(el)
       })
       return acc
