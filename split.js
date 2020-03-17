@@ -1,18 +1,16 @@
 const fs = require('fs')
 
-fs.readFile('./3.12.2020.csv', (err, data) => {
+fs.readFile('./schools.csv', (err, data) => {
   if (err) {
     console.error(err)
     return
   }
-  // TODO why array 5241 !== total schools 5342
+
   const array = data
     .toString()
     .split('\n')
     .map((e) => e.trim())
   const header = array.splice(0, 1)
-
-  console.log('items', array.length)
 
   const MAX_ITEMS = 1000
   const files = Math.ceil(array.length / MAX_ITEMS)
