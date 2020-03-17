@@ -15,10 +15,10 @@ export const forker = (schoolsData, callback) => {
 
       forked.on('message', ({ status, value }) => {
         if (status === 'DONE') {
+          callback(value)
+
           if (schools.length > 0) {
             forked.send({ schools: schools.splice(0, SCHOOLS_PER_FORK) })
-            const leftSchoolsCount = schoolsData.length - schools.length
-            callback(value, leftSchoolsCount)
           } else {
             forked.kill()
             resolve(cpuIndex)
