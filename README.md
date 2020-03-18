@@ -22,8 +22,11 @@ Each school in the file contains:
 ## Usage
 
 * run
-```
-yarn && node index
+```js
+yarn && node run
+// split schools.csv file into parts (max is 2000 items per file according to google maps)
+node split 
+
 ```
 * use created *.cvs file as you wish, for example, load it on google maps
 
