@@ -8,16 +8,19 @@ import { CONCURRENCY, HEADERS } from './consts'
 import { cvsHeader, parseSchoolData, getPageLink } from './helper'
 
 const getSchoolMetrics = async (schools) => {
+  let progressBarValue = 0
   const progressBar = new cliProgress.SingleBar({}, cliProgress.Presets.shades_classic)
   progressBar.start(schools.length, 0)
 
   const writeCSVStream = await createDocument()
 
   try {
-    await forker(schools, (schoolsWithStat, schoolsLeft) => {
-      const schoolsData = schoolsWithStat.map((school) => parseSchoolData(school)).join('')
-      writeCSVStream.write(schoolsData)
-      progressBar.update(schoolsLeft)
+    await forker(schools, (schoolsWithStat) => {
+      writeCSVStream.write(
+        schoolsWithStat.map((school) => parseSchoolData(school)).join('')
+      )
+      progressBarValue += schoolsWithStat.length
+      progressBar.update(progressBarValue)
     })
   } catch (e) {
     return Promise.reject(e)
@@ -29,9 +32,9 @@ const getSchoolMetrics = async (schools) => {
 
 const createDocument = async () => {
   try {
-    const date = new Date().toLocaleDateString().replace(/\//gi, '.')
-    await fsp.writeFile(`./${date}.csv`, cvsHeader)
-    const writeCSVStream = fs.createWriteStream(`./${date}.csv`, { flags: 'a' })
+    const fileName = 'schools'
+    await fsp.writeFile(`./${fileName}.csv`, cvsHeader)
+    const writeCSVStream = fs.createWriteStream(`./${fileName}.csv`, { flags: 'a' })
 
     writeCSVStream.on('error', (e) => {
       console.error('Stream error', e)
