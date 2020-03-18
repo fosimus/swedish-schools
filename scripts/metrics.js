@@ -27,7 +27,7 @@ export const runMetricsBySchool = (school) => new Promise(async (resolve, reject
   const statisticPromises = getStatisticPromises(statisticLinks)
 
   try {
-    const schoolStatistics = await pAll(statisticPromises)
+    const schoolStatistics = await pAll(statisticPromises, { concurrency: 10 })
     const stat = schoolStatistics.reduce((acc, cur) => {
       const result = { ...acc, ...cur }
       return result
